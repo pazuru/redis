@@ -1,0 +1,57 @@
+name: redis
+
+addons:
+- name: bpm
+  jobs:
+  - name: bpm
+    release: bpm
+
+instance_groups:
+- name: redis
+  azs: [z1]
+  instances: 2
+  vm_type: default
+  stemcell: default
+  persistent_disk_type: default
+  networks: [{name: default}]
+  jobs:
+  - name: redis
+    release: redis
+    properties:
+      password: ((redis-password))
+- name: sanity-tests
+  azs: [z1]
+  instances: 1
+  lifecycle: errand
+  vm_type: default
+  stemcell: default
+  networks: [{name: default}]
+  jobs:
+  - name: sanity-tests
+    release: redis
+
+variables:
+- name: redis-password
+  type: password
+
+update:
+  canaries: 0
+  max_in_flight: 1
+  serial: true
+  canary_watch_time: 1000-20000
+  update_watch_time: 1000-20000
+
+stemcells:
+- alias: default
+  os: ubuntu-trusty
+  version: latest
+
+releases:
+- name: bpm
+  sha1: f2bd126b17b3591160f501d88d79ccf0aba1ae54
+  url: git+https://github.com/cloudfoundry-incubator/bpm-release
+  version: 0.2.0
+- name: redis
+  version: 14.0.1
+  url: https://github.com/cloudfoundry-community/redis-boshrelease/releases/download/v14.0.1/redis-14.0.1.tgz
+  sha1: fd4a6107e1fb8aca1d551054d8bc07e4f53ddf05
